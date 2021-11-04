@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>Made with OpenLayers</title>
+        <link rel="stylesheet" href="static/css/bootstrap.min.css">
+        <link rel="stylesheet" href="static/css/ol.css">
+        <style>
+            .map {
+                height: 700px;
+                width: 100%;
+            }
+        </style>
+        <script src="static/js/bootstrap.bundle.min.js"></script>
+        <script src="static/js/ol.js"></script>
+
+    </head>
+
+    <body>
+        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+            <div class="container-fluid">
+              <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                  <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                      Cities I've Lived In
+                    </a>
+                    <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                      <li><a class="dropdown-item" href="#" onclick="setGeom('ryde')">Ryde</a></li>
+                      <li><a class="dropdown-item" href="#" onclick="setGeom('delhi')" >Delhi</a></li>
+                      <li><a class="dropdown-item" href="#" onclick="setGeom('darjeeling')">Darjeeling</a></li>
+                      <li><a class="dropdown-item" href="#" onclick="setGeom('jakarta')">Jakarta</a></li>
+                      
+                      <li><hr class="dropdown-divider"></li>
+                      <li><a class="dropdown-item" href="#">Something else here</a></li>
+                    </ul>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </nav>
+          <br/>
+
+        <div id="map" class="map"></div>
+
+        <script type="text/javascript">
+        var geometryMap = {};
+
+        const vector = new ol.layer.Vector({
+          source: new ol.source.Vector()
+        });
+
+        var map = new ol.Map({
+            target: 'map',
+            layers: [
+                new ol.layer.Tile({
+                    source: new ol.source.OSM()
+                }),
+                vector
+            ],
+            view: new ol.View({
+            center: ol.proj.fromLonLat([37.41, 8.82]),
+            zoom: 2,
+            projection: 'EPSG:4326'
+          })
+        });
+
+        const updateMapViewFromGeom = (geom) => {
+            const vector = new ol.layer.Vector({
+                source: new ol.source.Vector({
+                    projection: 'ESPG:3857'
+                }) 
+            });
+
+            vector.getSource().addFeatures(new ol.format.GeoJSON().readGeometry(geom));
+
+            let geometryFromGeom = new ol.format.GeoJSON().readGeometry(geom);
+            map.getView().fit(geometryFromGeom.getExtent(), map.getSize());
+            map.getView().setZoom(12);
+        }
+
+        const setGeom = (city_name) => {
+          let geom = null;
+          let url = `http://localhost:8615/api/v1/geometry/${city_name}`;
+          fetch(url).then(response => response.json()).then(data => {
+            geom = data;
+            console.log(geom);
+            updateMapViewFromGeom(geom);
+          });
+        }; 
+
+        </script>
+
+    </body>
+
+</html>
